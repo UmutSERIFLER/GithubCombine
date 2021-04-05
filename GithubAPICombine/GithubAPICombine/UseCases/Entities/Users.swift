@@ -1,5 +1,5 @@
 //
-//  Repos.swift
+//  Users.swift
 //  GithubAPICombine
 //
 //  Created by Umut SERIFLER on 25/02/2021.
@@ -8,8 +8,8 @@
 
 import Foundation
 
-struct Repos: Decodable {
+struct Users: Decodable {
     var total_count: Int
     var incomplete_results: Bool
-    var items: [Repo]
+    var items: [User]
 }

@@ -1,5 +1,5 @@
 //
-//  RepoTableViewCell.swift
+//  UsersTableViewCell.swift
 //  GithubAPICombine
 //
 //  Created by Umut SERIFLER on 26/02/2021.
@@ -9,7 +9,7 @@
 import UIKit
 import Combine
 
-class RepoTableViewCell: UITableViewCell, NibProvidable, ReusableView {
+class UsersTableViewCell: UITableViewCell, NibProvidable, ReusableView {
     
     @IBOutlet private var title: UILabel!
     @IBOutlet private var subtitle: UILabel!

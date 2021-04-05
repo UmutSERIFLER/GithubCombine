@@ -10,7 +10,7 @@ import UIKit
 
 /// The ApplicationComponentsFactory takes responsibity of creating application components and establishing dependencies between them.
 final class ApplicationComponentsFactory {
-    fileprivate lazy var useCase: SeaarchUseCaseType = GithubUseCase(networkService: servicesProvider.network, imageLoaderService: servicesProvider.imageLoader)
+    fileprivate lazy var useCase: SearchUseCaseType = GithubUseCase(networkService: servicesProvider.network, imageLoaderService: servicesProvider.imageLoader)
 
     private let servicesProvider: ServicesProvider
 
@@ -35,9 +35,8 @@ extension ApplicationComponentsFactory: GithubUserSearchFlowCoordinatorDependenc
         return GithubSearchViewController(viewModel: viewModel)
     }
 
-    func githubDetailsController(_ repoId: Int) -> UIViewController {
-//        let viewModel = GithubSearchViewModel(movieId: movieId, useCase: useCase)
-//        return MovieDetailsViewController(viewModel: viewModel)
-        return UIViewController()
+    func githubRepoDetailsController(_ repoName: String) -> UIViewController {
+        let viewModel = UserRepoDetailsViewModel(repoName: repoName, useCase: useCase)
+        return UserRepoDetailsViewController(viewModel: viewModel)
     }
 }

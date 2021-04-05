@@ -18,5 +18,5 @@ protocol GithubUserSearchFlowCoordinatorDependencyProvider: class {
     func githubSearchController(navigator: GithubSearchNavigator) -> UIViewController
 
     // Creates UIViewController to show the details of the repo with specified identifier
-    func githubDetailsController(_ repoID: Int) -> UIViewController
+    func githubRepoDetailsController(_ repoName: String) -> UIViewController
 }

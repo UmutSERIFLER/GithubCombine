@@ -26,8 +26,8 @@ class GithubUserSearchFlowCoordinator: FlowCoordinator {
 
 extension GithubUserSearchFlowCoordinator: GithubSearchNavigator {
 
-    func showDetails(forRepo repoId: Int) {
-        let controller = self.dependencyProvider.githubDetailsController(repoId)
+    func showRepoDetails(for repoName: String) {
+        let controller = self.dependencyProvider.githubRepoDetailsController(repoName)
         self.rootController.pushViewController(controller, animated: true)
     }
 

@@ -9,20 +9,23 @@ import Foundation
 import Combine
 import UIKit.UIImage
 
-protocol SeaarchUseCaseType {
+protocol SearchUseCaseType {
 
-    /// Runs repos search with a query string
-    func searchRepos(with name: String) -> AnyPublisher<Result<[Repo], Error>, Never>
+    /// Runs users search with a query string
+    func searchUsers(with name: String) -> AnyPublisher<Result<[User], Error>, Never>
 
-//    /// Fetches details for repo with specified id
-//    func repoDetails(with id: Int) -> AnyPublisher<Result<Repo, Error>, Never>
+    /// Fetches details for repo with specified id
+    func repoDetails(for name: String) -> AnyPublisher<Result<[UserReposDetailModel], Error>, Never>
 
     // Loads image for the given repo
-    func loadImage(for repo: Repo) -> AnyPublisher<UIImage?, Never>
+    func loadImage(for user: User) -> AnyPublisher<UIImage?, Never>
+    
+    // Loads image for the given repo detail
+    func loadImage(for repoDetail: UserReposDetailModel) -> AnyPublisher<UIImage?, Never>
 }
 
-final class GithubUseCase: SeaarchUseCaseType {
-
+final class GithubUseCase: SearchUseCaseType {
+   
     private let networkService: NetworkServiceType
     private let imageLoaderService: ImageLoaderServiceType
 
@@ -31,10 +34,10 @@ final class GithubUseCase: SeaarchUseCaseType {
         self.imageLoaderService = imageLoaderService
     }
 
-    func searchRepos(with name: String) -> AnyPublisher<Result<[Repo], Error>, Never> {
+    func searchUsers(with name: String) -> AnyPublisher<Result<[User], Error>, Never> {
         return networkService
-            .load(Resource<Repos>.repos(query: name))
-            .map({ (result: Result<Repos, NetworkError>) -> Result<[Repo], Error> in
+            .load(Resource<Users>.repos(query: name))
+            .map({ (result: Result<Users, NetworkError>) -> Result<[User], Error> in
                 switch result {
                 case .success(let repos): return .success(repos.items)
                 case .failure(let error): return .failure(error)
@@ -45,24 +48,35 @@ final class GithubUseCase: SeaarchUseCaseType {
             .eraseToAnyPublisher()
     }
 
-//    func repoDetails(with id: Int) -> AnyPublisher<Result<Repo, Error>, Never> {
-//        return networkService
-//            .load(Resource<Repo>.details(repoId: id))
-//            .map({ (result: Result<Repo, NetworkError>) -> Result<Repo, Error> in
-//                switch result {
-//                case .success(let repo): return .success(repo)
-//                case .failure(let error): return .failure(error)
-//                }
-//            })
-//            .subscribe(on: Scheduler.backgroundWorkScheduler)
-//            .receive(on: Scheduler.mainScheduler)
-//            .eraseToAnyPublisher()
-//    }
+    func repoDetails(for userName: String) -> AnyPublisher<Result<[UserReposDetailModel], Error>, Never> {
+        return networkService
+            .load(Resource<[UserReposDetailModel]>.userRepoDetails(for: userName))
+            .map({ (result: Result<[UserReposDetailModel], NetworkError>) -> Result<[UserReposDetailModel], Error> in
+                switch result {
+                case .success(let repos): return .success(repos)
+                case .failure(let error): return .failure(error)
+                }
+            })
+            .subscribe(on: Scheduler.backgroundWorkScheduler)
+            .receive(on: Scheduler.mainScheduler)
+            .eraseToAnyPublisher()
+    }
 
-    func loadImage(for repo: Repo) -> AnyPublisher<UIImage?, Never> {
-        return Deferred { return Just(repo.owner.avatarURL) }
+    func loadImage(for user: User) -> AnyPublisher<UIImage?, Never> {
+        return Deferred { return Just(user.avatar_url) }
         .flatMap({[unowned self] poster -> AnyPublisher<UIImage?, Never> in
-            return self.imageLoaderService.loadImage(from: URL(string: repo.owner.avatarURL)!)
+            return self.imageLoaderService.loadImage(from: URL(string: user.avatar_url)!)
+        })
+        .subscribe(on: Scheduler.backgroundWorkScheduler)
+        .receive(on: Scheduler.mainScheduler)
+        .share()
+        .eraseToAnyPublisher()
+    }
+    
+    func loadImage(for repoDetail: UserReposDetailModel) -> AnyPublisher<UIImage?, Never> {
+        return Deferred { return Just(repoDetail.owner.avatar_url) }
+        .flatMap({[unowned self] poster -> AnyPublisher<UIImage?, Never> in
+            return self.imageLoaderService.loadImage(from: URL(string: repoDetail.owner.avatar_url)!)
         })
         .subscribe(on: Scheduler.backgroundWorkScheduler)
         .receive(on: Scheduler.mainScheduler)

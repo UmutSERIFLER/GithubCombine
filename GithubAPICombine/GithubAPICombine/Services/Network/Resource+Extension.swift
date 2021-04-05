@@ -10,20 +10,16 @@ import Foundation
 
 extension Resource {
 
-    static func repos(query: String) -> Resource<Repos> {
-        let url = URL(string: "https://api.github.com/")!.appendingPathComponent("search/repositories")
+    static func repos(query: String) -> Resource<Users> {
+        let url = URL(string: "https://api.github.com/")!.appendingPathComponent("search/users")
         let parameters: [String : CustomStringConvertible] = [
             "q": query,
             ]
-        return Resource<Repos>(url: url, parameters: parameters)
+        return Resource<Users>(url: url, parameters: parameters)
     }
 
-//    static func details(repoId: Int) -> Resource<Repo> {
-//        let url = URL(string: "https://api.github.com/")!.appendingPathComponent("/repositories/\(repoId)")
-//        let parameters: [String : CustomStringConvertible] = [
-//            "api_key": "",
-//            "language": ""//Locale.preferredLanguages[0]
-//            ]
-//        return Resource<Repo>(url: url, parameters: parameters)
-//    }
+    static func userRepoDetails(for repoOwner: String) -> Resource<[UserReposDetailModel]> {
+        let url = URL(string: "https://api.github.com/")!.appendingPathComponent("users/\(repoOwner)/repos")
+        return Resource<[UserReposDetailModel]>(url: url)
+    }
 }

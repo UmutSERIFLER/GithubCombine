@@ -13,7 +13,7 @@ class GithubSearchViewController : UIViewController {
 
     private var cancellables: [AnyCancellable] = []
     private let viewModel: GithubSearchViewModelType
-    private let selection = PassthroughSubject<Int, Never>()
+    private let selection = PassthroughSubject<String, Never>()
     private let search = PassthroughSubject<String, Never>()
     private let appear = PassthroughSubject<Void, Never>()
 
@@ -54,7 +54,7 @@ class GithubSearchViewController : UIViewController {
         definesPresentationContext = true
         title = NSLocalizedString("Repos", comment: "Top Repo")
         tableview.tableFooterView = UIView()
-        tableview.registerNib(cellClass: RepoTableViewCell.self)
+        tableview.registerNib(cellClass: UsersTableViewCell.self)
         tableview.dataSource = dataSource
 
         navigationItem.searchController = self.searchController
@@ -99,25 +99,25 @@ class GithubSearchViewController : UIViewController {
             alertViewController.showDataLoadingError()
             loadingView.isHidden = true
             update(with: [], animate: true)
-        case .success(let repos):
+        case .success(let users):
             alertViewController.view.isHidden = true
             loadingView.isHidden = true
-            update(with: repos, animate: true)
+            update(with: users, animate: true)
         }
     }
 }
 
 fileprivate extension GithubSearchViewController {
     enum Section: CaseIterable {
-        case repos
+        case users
     }
 
     func makeDataSource() -> UITableViewDiffableDataSource<Section, GithubViewModel> {
         return UITableViewDiffableDataSource(
             tableView: tableview,
             cellProvider: {  tableView, indexPath, repoViewModel in
-                guard let cell = tableView.dequeueReusableCell(withClass: RepoTableViewCell.self) else {
-                    assertionFailure("Failed to dequeue \(RepoTableViewCell.self)!")
+                guard let cell = tableView.dequeueReusableCell(withClass: UsersTableViewCell.self) else {
+                    assertionFailure("Failed to dequeue \(UsersTableViewCell.self)!")
                     return UITableViewCell()
                 }
                 cell.bind(to: repoViewModel)
@@ -126,11 +126,11 @@ fileprivate extension GithubSearchViewController {
         )
     }
 
-    func update(with repos: [GithubViewModel], animate: Bool = true) {
+    func update(with users: [GithubViewModel], animate: Bool = true) {
         DispatchQueue.main.async {
             var snapshot = NSDiffableDataSourceSnapshot<Section, GithubViewModel>()
             snapshot.appendSections(Section.allCases)
-            snapshot.appendItems(repos, toSection: .repos)
+            snapshot.appendItems(users, toSection: .users)
             self.dataSource.apply(snapshot, animatingDifferences: animate)
         }
     }
@@ -150,7 +150,7 @@ extension GithubSearchViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let snapshot = dataSource.snapshot()
-        selection.send(snapshot.itemIdentifiers[indexPath.row].id)
+        selection.send(snapshot.itemIdentifiers[indexPath.row].fullName)
         tableView.deselectRow(at: indexPath, animated: true)
     }
 

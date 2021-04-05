@@ -10,5 +10,5 @@ import Foundation
 
 protocol GithubSearchNavigator: AutoMockable, AnyObject {
     /// Presents the repos details screen
-    func showDetails(forRepo repoId: Int)
+    func showRepoDetails(for repoName: String)
 }
