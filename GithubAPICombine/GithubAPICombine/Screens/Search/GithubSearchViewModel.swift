@@ -12,20 +12,20 @@ import Combine
 final class GithubSearchViewModel: GithubSearchViewModelType {
 
     private weak var navigator: GithubSearchNavigator?
-    private let useCase: SeaarchUseCaseType
+    private let useCase: SearchUseCaseType
     private var cancellables: [AnyCancellable] = []
 
-    init(useCase: SeaarchUseCaseType, navigator: GithubSearchNavigator) {
+    init(useCase: SearchUseCaseType, navigator: GithubSearchNavigator) {
         self.useCase = useCase
         self.navigator = navigator
     }
 
-    func transform(input: GithubSearchViewModelInput) -> GithubSearchViewModelOuput {
+    func transform(input: GithubSearchViewModelInput) -> GithubSearchViewModelOutput {
         cancellables.forEach { $0.cancel() }
         cancellables.removeAll()
 
         input.selection
-            .sink(receiveValue: { [unowned self] repoId in self.navigator?.showDetails(forRepo: repoId) })
+            .sink(receiveValue: { [unowned self] repoName in self.navigator?.showRepoDetails(for: repoName) })
             .store(in: &cancellables)
 
         let searchInput = input.search
@@ -33,26 +33,26 @@ final class GithubSearchViewModel: GithubSearchViewModelType {
             .removeDuplicates()
         let repos = searchInput
             .filter({ !$0.isEmpty })
-            .flatMapLatest({[unowned self] query in self.useCase.searchRepos(with: query) })
+            .flatMapLatest({[unowned self] query in self.useCase.searchUsers(with: query) })
             .map({ result -> GithubSearchState in
                 switch result {
                     case .success([]): return .noResults
-                    case .success(let repos): return .success(self.viewModels(from: repos))
+                    case .success(let users): return .success(self.viewModels(from: users))
                     case .failure(let error): return .failure(error)
                 }
             })
             .eraseToAnyPublisher()
 
-        let initialState: GithubSearchViewModelOuput = .just(.idle)
-        let emptySearchString: GithubSearchViewModelOuput = searchInput.filter({ $0.isEmpty }).map({ _ in .idle }).eraseToAnyPublisher()
-        let idle: GithubSearchViewModelOuput = Publishers.Merge(initialState, emptySearchString).eraseToAnyPublisher()
+        let initialState: GithubSearchViewModelOutput = .just(.idle)
+        let emptySearchString: GithubSearchViewModelOutput = searchInput.filter({ $0.isEmpty }).map({ _ in .idle }).eraseToAnyPublisher()
+        let idle: GithubSearchViewModelOutput = Publishers.Merge(initialState, emptySearchString).eraseToAnyPublisher()
 
         return Publishers.Merge(idle, repos).removeDuplicates().eraseToAnyPublisher()
     }
 
-    private func viewModels(from repos: [Repo]) -> [GithubViewModel] {
-        return repos.map({[unowned self] repo in
-            return GithubViewModelBuilder.viewModel(from: repo, imageLoader: {[unowned self] repo in self.useCase.loadImage(for: repo) })
+    private func viewModels(from users: [User]) -> [GithubViewModel] {
+        return users.map({[unowned self] user in
+            return GithubViewModelBuilder.viewModel(from: user, imageLoader: {[unowned self] repo in self.useCase.loadImage(for: repo) })
         })
     }
 

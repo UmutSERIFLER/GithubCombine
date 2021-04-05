@@ -14,7 +14,7 @@ struct GithubSearchViewModelInput {
     // triggered when the search query is updated
     let search: AnyPublisher<String, Never>
     /// called when the user selected an item from the list
-    let selection: AnyPublisher<Int, Never>
+    let selection: AnyPublisher<String, Never>
 }
 
 enum GithubSearchState {
@@ -38,8 +38,8 @@ extension GithubSearchState: Equatable {
     }
 }
 
-typealias GithubSearchViewModelOuput = AnyPublisher<GithubSearchState, Never>
+typealias GithubSearchViewModelOutput = AnyPublisher<GithubSearchState, Never>
 
 protocol GithubSearchViewModelType {
-    func transform(input: GithubSearchViewModelInput) -> GithubSearchViewModelOuput
+    func transform(input: GithubSearchViewModelInput) -> GithubSearchViewModelOutput
 }
