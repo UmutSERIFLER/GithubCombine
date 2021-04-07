@@ -11,16 +11,6 @@ import Combine
 
 class ReposTableViewCell: UITableViewCell, NibProvidable, ReusableView {
     
-    private var cancellable: AnyCancellable?
-    
-    fileprivate lazy var repoImage : UIImageView = {
-        let imageView = UIImageView(frame: CGRect.init(origin: .zero, size: CGSize(width: 50, height: 50)))
-        imageView.contentMode = .scaleAspectFit
-        imageView.clipsToBounds = true
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
-    }()
-    
     fileprivate lazy var repoName : UILabel = {
         let label = UILabel()
         label.textColor = .black
@@ -37,15 +27,9 @@ class ReposTableViewCell: UITableViewCell, NibProvidable, ReusableView {
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     
     func updateUIComponents() {
-        self.addSubview(repoImage)
         self.addSubview(repoName)
         NSLayoutConstraint.activate([
-            self.repoImage.leftAnchor.constraint(equalTo: self.leftAnchor),
-            self.repoImage.heightAnchor.constraint(equalTo: self.heightAnchor),
-            self.repoImage.widthAnchor.constraint(equalToConstant: 100),
-            self.repoImage.centerYAnchor.constraint(equalTo: self.centerYAnchor),
-            
-            self.repoName.leftAnchor.constraint(equalTo: self.repoImage.rightAnchor),
+            self.repoName.leftAnchor.constraint(equalTo: self.leftAnchor, constant: 10),
             self.repoName.heightAnchor.constraint(equalTo: self.heightAnchor),
             self.repoName.trailingAnchor.constraint(equalTo: self.trailingAnchor),
             self.repoName.topAnchor.constraint(equalTo: self.topAnchor)
@@ -54,29 +38,12 @@ class ReposTableViewCell: UITableViewCell, NibProvidable, ReusableView {
     
     func bind(to viewModel: RepoDetailViewModel) {
         updateUIComponents()
-        cancelImageLoading()
-        repoName.text = viewModel.fullName
-        cancellable = viewModel.avatarURL.sink { [unowned self] image in self.showImage(image: image) }
-    }
-
-    private func showImage(image: UIImage?) {
-        cancelImageLoading()
-        UIView.transition(with: self.repoImage,
-        duration: 0.3,
-        options: [.curveEaseOut, .transitionCrossDissolve],
-        animations: {
-            self.repoImage.image = image
-        })
-    }
-
-    private func cancelImageLoading() {
-        repoImage.image = nil
-        cancellable?.cancel()
+        repoName.text = viewModel.fullName.components(separatedBy: "/").last
     }
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        cancelImageLoading()
+        self.repoName.text = ""
     }
     
 }
