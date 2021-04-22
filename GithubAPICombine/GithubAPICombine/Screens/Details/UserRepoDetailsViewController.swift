@@ -64,12 +64,13 @@ class UserRepoDetailsViewController: UIViewController {
     }
 
     private func showRepos(_ reposDetails: [RepoDetailViewModel]) {
-        title = NSLocalizedString(reposDetails.first?.fullName ?? "", comment: "UnknownRepoOwner")
-        detailTitle.text = reposDetails.first?.fullName ?? ""
+        let respositoryOwnerName = reposDetails.first?.fullName.components(separatedBy: "/").first
+        title = NSLocalizedString(respositoryOwnerName ?? "", comment: "UnknownRepoOwner")
+        detailTitle.text = ("Repository Owner : \(respositoryOwnerName ?? "")")
         reposDetails.first?.avatarURL
             .assign(to: \UIImageView.image, on: self.detailImage)
             .store(in: &cancellables)
-        update(with: reposDetails)
+        update(with: reposDetails, animate: true)
     }
 }
 
@@ -77,11 +78,12 @@ fileprivate extension UserRepoDetailsViewController {
     enum Section: CaseIterable {
         case repos
     }
-
+    
     func makeDataSource() -> UITableViewDiffableDataSource<Section, RepoDetailViewModel> {
         return UITableViewDiffableDataSource(
             tableView: reposTableView,
             cellProvider: {  tableView, indexPath, repoViewModel in
+                print(indexPath.row)
                 guard let cell = tableView.dequeueReusableCell(withIdentifier: ReposTableViewCell.nibName, for: indexPath) as? ReposTableViewCell else {
                     assertionFailure("Failed to dequeue \(ReposTableViewCell.self)!")
                     return UITableViewCell()
@@ -91,12 +93,12 @@ fileprivate extension UserRepoDetailsViewController {
             }
         )
     }
-
-    func update(with repos: [RepoDetailViewModel], animate: Bool = true) {
+    
+    func update(with values: [RepoDetailViewModel], animate: Bool) {
         DispatchQueue.main.async {
             var snapshot = NSDiffableDataSourceSnapshot<Section, RepoDetailViewModel>()
-            snapshot.appendSections(Section.allCases)
-            snapshot.appendItems(repos, toSection: .repos)
+            snapshot.appendSections([.repos])
+            snapshot.appendItems(values, toSection: .repos)
             self.dataSource.apply(snapshot, animatingDifferences: animate)
         }
     }

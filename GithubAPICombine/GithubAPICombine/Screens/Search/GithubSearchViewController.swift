@@ -10,13 +10,13 @@ import UIKit
 import Combine
 
 class GithubSearchViewController : UIViewController {
-
+    
     private var cancellables: [AnyCancellable] = []
     private let viewModel: GithubSearchViewModelType
     private let selection = PassthroughSubject<String, Never>()
     private let search = PassthroughSubject<String, Never>()
     private let appear = PassthroughSubject<Void, Never>()
-
+    
     @IBOutlet weak var loadingView: UIView!
     
     @IBOutlet private var tableview: UITableView!
@@ -29,55 +29,55 @@ class GithubSearchViewController : UIViewController {
         return searchController
     }()
     private lazy var dataSource = makeDataSource()
-
+    
     init(viewModel: GithubSearchViewModelType) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
-
+    
     required init?(coder: NSCoder) {
         fatalError("Not supported!")
     }
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
         bind(to: viewModel)
     }
-
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         appear.send(())
     }
-
+    
     private func configureUI() {
         definesPresentationContext = true
         title = NSLocalizedString("Repos", comment: "Top Repo")
         tableview.tableFooterView = UIView()
         tableview.registerNib(cellClass: UsersTableViewCell.self)
         tableview.dataSource = dataSource
-
+        
         navigationItem.searchController = self.searchController
         searchController.isActive = true
-
+        
         add(alertViewController)
         alertViewController.showStartSearch()
     }
-
+    
     private func bind(to viewModel: GithubSearchViewModelType) {
         cancellables.forEach { $0.cancel() }
         cancellables.removeAll()
         let input = GithubSearchViewModelInput(appear: appear.eraseToAnyPublisher(),
                                                search: search.eraseToAnyPublisher(),
                                                selection: selection.eraseToAnyPublisher())
-
+        
         let output = viewModel.transform(input: input)
-
+        
         output.sink(receiveValue: {[unowned self] state in
             self.render(state)
         }).store(in: &cancellables)
     }
-
+    
     private func render(_ state: GithubSearchState) {
         switch state {
         case .idle:
@@ -111,11 +111,12 @@ fileprivate extension GithubSearchViewController {
     enum Section: CaseIterable {
         case users
     }
-
+    
     func makeDataSource() -> UITableViewDiffableDataSource<Section, GithubViewModel> {
         return UITableViewDiffableDataSource(
             tableView: tableview,
             cellProvider: {  tableView, indexPath, repoViewModel in
+                print(indexPath.row)
                 guard let cell = tableView.dequeueReusableCell(withClass: UsersTableViewCell.self) else {
                     assertionFailure("Failed to dequeue \(UsersTableViewCell.self)!")
                     return UITableViewCell()
@@ -125,12 +126,12 @@ fileprivate extension GithubSearchViewController {
             }
         )
     }
-
-    func update(with users: [GithubViewModel], animate: Bool = true) {
+    
+    func update(with values: [GithubViewModel], animate: Bool) {
         DispatchQueue.main.async {
             var snapshot = NSDiffableDataSourceSnapshot<Section, GithubViewModel>()
-            snapshot.appendSections(Section.allCases)
-            snapshot.appendItems(users, toSection: .users)
+            snapshot.appendSections([.users])
+            snapshot.appendItems(values, toSection: .users)
             self.dataSource.apply(snapshot, animatingDifferences: animate)
         }
     }
@@ -140,22 +141,26 @@ extension GithubSearchViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         search.send(searchText)
     }
-
+    
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
         search.send("")
     }
 }
 
 extension GithubSearchViewController: UITableViewDelegate {
-
+    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let snapshot = dataSource.snapshot()
         selection.send(snapshot.itemIdentifiers[indexPath.row].fullName)
         tableView.deselectRow(at: indexPath, animated: true)
     }
-
+    
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         searchController.searchBar.resignFirstResponder()
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 100
     }
 }
 
