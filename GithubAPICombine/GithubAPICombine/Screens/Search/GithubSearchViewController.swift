@@ -116,7 +116,6 @@ fileprivate extension GithubSearchViewController {
         return UITableViewDiffableDataSource(
             tableView: tableview,
             cellProvider: {  tableView, indexPath, repoViewModel in
-                print(indexPath.row)
                 guard let cell = tableView.dequeueReusableCell(withClass: UsersTableViewCell.self) else {
                     assertionFailure("Failed to dequeue \(UsersTableViewCell.self)!")
                     return UITableViewCell()
