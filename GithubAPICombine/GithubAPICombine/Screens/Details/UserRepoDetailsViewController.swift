@@ -83,7 +83,6 @@ fileprivate extension UserRepoDetailsViewController {
         return UITableViewDiffableDataSource(
             tableView: reposTableView,
             cellProvider: {  tableView, indexPath, repoViewModel in
-                print(indexPath.row)
                 guard let cell = tableView.dequeueReusableCell(withIdentifier: ReposTableViewCell.nibName, for: indexPath) as? ReposTableViewCell else {
                     assertionFailure("Failed to dequeue \(ReposTableViewCell.self)!")
                     return UITableViewCell()
